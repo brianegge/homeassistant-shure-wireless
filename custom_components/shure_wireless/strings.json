@@ -14,6 +14,13 @@
           "num_channels": "Number of channels on the receiver (1, 2, or 4)"
         }
       },
+      "zeroconf_confirm": {
+        "title": "Shure Wireless Discovered",
+        "description": "Found **{name}** at `{host}`. How many channels does this receiver have?",
+        "data": {
+          "num_channels": "Number of channels"
+        }
+      },
       "reconfigure": {
         "title": "Reconfigure Shure Wireless",
         "data": {
