@@ -1,0 +1,66 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Shure Wireless Receiver",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "num_channels": "Number of channels"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Shure receiver",
+          "port": "Network control port (default 2202)",
+          "num_channels": "Number of channels on the receiver (1, 2, or 4)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Shure Wireless",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "num_channels": "Number of channels"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Shure receiver",
+          "port": "Network control port (default 2202)",
+          "num_channels": "Number of channels on the receiver (1, 2, or 4)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Shure receiver"
+    },
+    "abort": {
+      "already_configured": "This receiver is already configured",
+      "reconfigure_successful": "Reconfiguration was successful"
+    }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Cannot connect to Shure receiver at {host}: {error}"
+    },
+    "communication_error": {
+      "message": "Error communicating with Shure receiver at {host}: {error}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_level": {
+        "name": "Battery"
+      },
+      "battery_runtime": {
+        "name": "Battery runtime"
+      },
+      "rf_level": {
+        "name": "RF signal"
+      },
+      "audio_level": {
+        "name": "Audio level"
+      },
+      "channel_name": {
+        "name": "Channel name"
+      }
+    }
+  }
+}
