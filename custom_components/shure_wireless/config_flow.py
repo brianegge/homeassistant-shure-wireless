@@ -29,9 +29,7 @@ class ShureWirelessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -62,17 +60,13 @@ class ShureWirelessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required("host"): str,
                     vol.Required("port", default=DEFAULT_PORT): int,
-                    vol.Required("num_channels", default=4): vol.In(
-                        {1: "1", 2: "2", 4: "4"}
-                    ),
+                    vol.Required("num_channels", default=4): vol.In({1: "1", 2: "2", 4: "4"}),
                 }
             ),
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle reconfiguration."""
         errors: dict[str, str] = {}
         reconfigure_entry = self._get_reconfigure_entry()

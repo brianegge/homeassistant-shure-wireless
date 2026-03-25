@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Callable
+from collections.abc import Callable
+from dataclasses import dataclass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,9 +72,7 @@ class ShureClient:
         self.num_channels = num_channels
 
         self.receiver = ReceiverState()
-        self.channels: dict[int, ChannelState] = {
-            i: ChannelState() for i in range(1, num_channels + 1)
-        }
+        self.channels: dict[int, ChannelState] = {i: ChannelState() for i in range(1, num_channels + 1)}
 
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
@@ -123,10 +122,8 @@ class ShureClient:
         self._connected = False
         if self._listen_task:
             self._listen_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._listen_task
-            except asyncio.CancelledError:
-                pass
             self._listen_task = None
         if self._writer:
             try:
@@ -307,9 +304,7 @@ class ShureClient:
             val = int(value)
             channel.battery_temp_c = None if val == 255 else val + 40
         elif key in ("RF_INT_DET", "INTERFERENCE_STATUS"):
-            channel.interference_status = (
-                "DETECTED" if value == "CRITICAL" else value
-            )
+            channel.interference_status = "DETECTED" if value == "CRITICAL" else value
         elif key == "ENCRYPTION":
             channel.encryption_status = "OK" if value == "OFF" else value
         elif key in ("MUTE_STATUS", "MUTE_MODE_STATUS"):

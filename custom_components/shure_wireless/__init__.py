@@ -46,34 +46,24 @@ class ShureCoordinator(DataUpdateCoordinator[None]):
         """Heartbeat: verify connection and re-request state if needed."""
         if not self.client.connected:
             if self._was_available:
-                _LOGGER.warning(
-                    "Lost connection to Shure receiver at %s", self.client.host
-                )
+                _LOGGER.warning("Lost connection to Shure receiver at %s", self.client.host)
                 self._was_available = False
             try:
                 await self.client.connect()
-                _LOGGER.info(
-                    "Reconnected to Shure receiver at %s", self.client.host
-                )
+                _LOGGER.info("Reconnected to Shure receiver at %s", self.client.host)
                 self._was_available = True
             except Exception as err:
-                raise UpdateFailed(
-                    f"Cannot connect to Shure receiver at {self.client.host}: {err}"
-                ) from err
+                raise UpdateFailed(f"Cannot connect to Shure receiver at {self.client.host}: {err}") from err
         else:
             if not self._was_available:
-                _LOGGER.info(
-                    "Shure receiver at %s is available again", self.client.host
-                )
+                _LOGGER.info("Shure receiver at %s is available again", self.client.host)
                 self._was_available = True
             # Send a heartbeat query to keep the connection alive
             try:
                 await self.client.send_command("GET 1 METER_RATE")
             except Exception as err:
                 self._was_available = False
-                raise UpdateFailed(
-                    f"Error communicating with Shure receiver at {self.client.host}: {err}"
-                ) from err
+                raise UpdateFailed(f"Error communicating with Shure receiver at {self.client.host}: {err}") from err
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ShureConfigEntry) -> bool:
@@ -87,9 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShureConfigEntry) -> boo
     try:
         await client.connect()
     except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Cannot connect to Shure receiver at {host}:{port}: {err}"
-        ) from err
+        raise ConfigEntryNotReady(f"Cannot connect to Shure receiver at {host}:{port}: {err}") from err
 
     coordinator = ShureCoordinator(hass, client)
 
