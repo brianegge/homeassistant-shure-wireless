@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_level": {
+        "default": "mdi:battery",
+        "state": {
+          "100": "mdi:battery",
+          "90": "mdi:battery-90",
+          "80": "mdi:battery-80",
+          "70": "mdi:battery-70",
+          "60": "mdi:battery-60",
+          "50": "mdi:battery-50",
+          "40": "mdi:battery-40",
+          "30": "mdi:battery-30",
+          "20": "mdi:battery-20",
+          "10": "mdi:battery-10",
+          "0": "mdi:battery-outline"
+        }
+      },
+      "battery_runtime": {
+        "default": "mdi:battery-clock-outline"
+      },
+      "rf_level": {
+        "default": "mdi:antenna"
+      },
+      "audio_level": {
+        "default": "mdi:microphone"
+      },
+      "channel_name": {
+        "default": "mdi:tag-text-outline"
+      }
+    }
+  }
+}
