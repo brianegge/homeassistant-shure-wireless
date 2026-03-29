@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -12,7 +11,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.shure_wireless import ShureRuntimeData
 from custom_components.shure_wireless.const import DOMAIN
 
-from .conftest import MOCK_CONFIG, MOCK_DEVICE_ID, MOCK_HOST, MOCK_PORT, make_mock_client
+from .conftest import make_mock_client
 
 
 async def test_setup_entry(

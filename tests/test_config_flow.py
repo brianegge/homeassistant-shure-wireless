@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import pytest
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.shure_wireless.const import DEFAULT_PORT, DOMAIN
+from custom_components.shure_wireless.const import DOMAIN
 
-from .conftest import MOCK_CONFIG, MOCK_DEVICE_ID, MOCK_HOST, MOCK_NUM_CHANNELS, MOCK_PORT
+from .conftest import MOCK_CONFIG, MOCK_DEVICE_ID, MOCK_HOST, MOCK_PORT
 
 MOCK_ZEROCONF_INFO = ZeroconfServiceInfo(
     ip_address=None,
