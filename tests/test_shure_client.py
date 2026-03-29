@@ -246,26 +246,28 @@ class TestSampleParsing:
         self.client.register_callback(self.callback)
 
     def test_sample_parsing(self):
-        # SLX-D format: SAMPLE <ch> ALL <rf_a> <rf_b> <audio_peak> <audio_rms>
-        self.client._process_line("SAMPLE 1 ALL 070 065 095 080")
-        assert self.client.channels[1].rf_level == -50  # max(70,65) - 120
+        # SLXD format: SAMPLE <ch> ALL <rf> <audio_peak> <audio_rms>
+        self.client._process_line("SAMPLE 1 ALL 070 095 080")
+        assert self.client.channels[1].rf_level == -50  # 70 - 120
         assert self.client.channels[1].audio_level_peak == -25  # 95 - 120
         assert self.client.channels[1].audio_level == -40  # 80 - 120
 
     def test_sample_channel_2(self):
-        self.client._process_line("SAMPLE 2 ALL 060 055 100 090")
-        assert self.client.channels[2].rf_level == -60  # max(60,55) - 120
+        self.client._process_line("SAMPLE 2 ALL 060 100 090")
+        assert self.client.channels[2].rf_level == -60  # 60 - 120
         assert self.client.channels[2].audio_level_peak == -20  # 100 - 120
         assert self.client.channels[2].audio_level == -30  # 90 - 120
 
-    def test_sample_uses_best_antenna(self):
-        """RF level should be the best (highest) of the two antennas."""
-        self.client._process_line("SAMPLE 1 ALL 050 080 095 080")
-        assert self.client.channels[1].rf_level == -40  # max(50,80) - 120 = -40
+    def test_sample_real_device_data(self):
+        """Test with actual data captured from SLXD4DE receiver."""
+        self.client._process_line("SAMPLE 1 ALL 005 020 015")
+        assert self.client.channels[1].rf_level == -115  # 5 - 120
+        assert self.client.channels[1].audio_level_peak == -100  # 20 - 120
+        assert self.client.channels[1].audio_level == -105  # 15 - 120
 
     def test_sample_unknown_channel(self):
         """SAMPLE for non-existent channel should be ignored."""
-        self.client._process_line("SAMPLE 9 ALL 060 055 100 090")
+        self.client._process_line("SAMPLE 9 ALL 060 100 090")
         self.callback.assert_not_called()
 
     def test_sample_too_short(self):
@@ -273,11 +275,11 @@ class TestSampleParsing:
         self.callback.assert_not_called()
 
     def test_sample_callback(self):
-        self.client._process_line("SAMPLE 1 ALL 060 055 100 090")
+        self.client._process_line("SAMPLE 1 ALL 060 100 090")
         self.callback.assert_called_once()
 
     def test_sample_invalid_channel(self):
-        self.client._process_line("SAMPLE XX ALL 060 055 100 090")
+        self.client._process_line("SAMPLE XX ALL 060 100 090")
         self.callback.assert_not_called()
 
 
