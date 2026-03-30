@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from . import ShureConfigEntry
 
-TO_REDACT: set[str] = set()
+TO_REDACT: set[str] = {"host", "device_id", "tx_device_id", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
