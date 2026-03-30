@@ -12,7 +12,7 @@ from custom_components.shure_wireless.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 
-from .conftest import MOCK_DEVICE_ID, MOCK_HOST, MOCK_PORT, make_mock_client
+from .conftest import MOCK_HOST, MOCK_PORT, make_mock_client
 
 
 async def test_diagnostics(
