@@ -32,6 +32,7 @@ async def test_diagnostics(
     assert "connection" in result
     assert "channels" in result
     assert "coordinator" in result
+    assert "devices" in result
 
     # Config entry data - host and unique_id should be redacted
     assert result["config_entry"]["data"]["host"] == "**REDACTED**"

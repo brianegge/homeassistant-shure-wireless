@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import ShureConfigEntry
 
@@ -20,6 +21,11 @@ async def async_get_config_entry_diagnostics(
     runtime = entry.runtime_data
     client = runtime.client
     coordinator = runtime.coordinator
+
+    await coordinator.async_request_refresh()
+
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     channels_data: dict[str, dict[str, Any]] = {}
     for ch_num, ch_state in client.channels.items():
@@ -70,6 +76,14 @@ async def async_get_config_entry_diagnostics(
             "coordinator": {
                 "last_update_success": coordinator.last_update_success,
             },
+            "devices": [
+                {
+                    "name": device.name,
+                    "model": device.model,
+                    "sw_version": device.sw_version,
+                }
+                for device in devices
+            ],
         },
         TO_REDACT,
     )
