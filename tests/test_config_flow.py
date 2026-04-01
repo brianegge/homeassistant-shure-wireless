@@ -208,7 +208,7 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    new_host = "10.0.0.50"
+    new_host = "shure-reconfigure.local"
     with patch(
         "custom_components.shure_wireless.config_flow._test_connection",
         new_callable=AsyncMock,

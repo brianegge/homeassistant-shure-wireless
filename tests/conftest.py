@@ -16,7 +16,7 @@ from custom_components.shure_wireless.shure_client import (
     ShureClient,
 )
 
-MOCK_HOST = "192.168.1.100"
+MOCK_HOST = "shure-receiver.local"
 MOCK_PORT = DEFAULT_PORT
 MOCK_NUM_CHANNELS = 2
 
