@@ -6,9 +6,20 @@ from unittest.mock import MagicMock
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.shure_wireless.shure_client import ChannelState
+
+
+def _get_entity_id(hass: HomeAssistant, unique_id_suffix: str, entry_id: str) -> str:
+    """Look up entity_id by unique_id pattern."""
+    entity_registry = er.async_get(hass)
+    target_uid = f"{entry_id}_{unique_id_suffix}"
+    for entity in entity_registry.entities.values():
+        if entity.unique_id == target_uid:
+            return entity.entity_id
+    raise AssertionError(f"Entity with unique_id '{target_uid}' not found")
 
 
 async def test_battery_level_sensor(
@@ -20,7 +31,8 @@ async def test_battery_level_sensor(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_battery")
+    entity_id = _get_entity_id(hass, "ch1_battery", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "75"
 
@@ -41,7 +53,8 @@ async def test_battery_runtime_sensor(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_duration")
+    entity_id = _get_entity_id(hass, "ch1_battery_runtime", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "120"
 
@@ -55,7 +68,8 @@ async def test_rf_level_sensor(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_signal_strength")
+    entity_id = _get_entity_id(hass, "ch1_rf_level", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "-50"
 
@@ -75,7 +89,8 @@ async def test_rf_level_sensor_no_signal(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_signal_strength")
+    entity_id = _get_entity_id(hass, "ch1_rf_level", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
 
@@ -89,8 +104,8 @@ async def test_channel_name_sensor(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Channel name entity gets _2 suffix because sensor.mic_1 is taken by audio_level
-    state = hass.states.get("sensor.mic_1_2")
+    entity_id = _get_entity_id(hass, "ch1_name", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "Mic 1"
 
@@ -109,8 +124,8 @@ async def test_channel_name_empty(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # With empty name, device name is "Channel 1", so entity IDs change
-    state = hass.states.get("sensor.channel_1_2")
+    entity_id = _get_entity_id(hass, "ch1_name", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
 
@@ -124,9 +139,10 @@ async def test_multiple_channels(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # We have 2 channels in mock config
+    # We have 2 channels in mock config - verify battery sensors for both
     for ch in [1, 2]:
-        state = hass.states.get(f"sensor.mic_{ch}_battery")
+        entity_id = _get_entity_id(hass, f"ch{ch}_battery", mock_config_entry.entry_id)
+        state = hass.states.get(entity_id)
         assert state is not None, f"Battery sensor for channel {ch} not found"
 
 
@@ -139,8 +155,10 @@ async def test_sensor_unavailable_when_disconnected(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    entity_id = _get_entity_id(hass, "ch1_battery", mock_config_entry.entry_id)
+
     # Verify initially available
-    state = hass.states.get("sensor.mic_1_battery")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -152,7 +170,7 @@ async def test_sensor_unavailable_when_disconnected(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_battery")
+    state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -169,12 +187,113 @@ async def test_battery_level_none_attributes(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_battery")
+    entity_id = _get_entity_id(hass, "ch1_battery", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "50"
-    # These should not be in attributes when None
     assert "battery_bars" not in state.attributes
     assert "battery_type" not in state.attributes
+
+
+async def test_audio_level_sensor_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test audio level sensor when enabled."""
+    # First, set up so the entity is registered (but disabled)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = _get_entity_id(hass, "ch1_audio_level", mock_config_entry.entry_id)
+
+    # Enable the disabled-by-default entity
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        entity_id,
+        disabled_by=None,
+    )
+
+    # Reload to pick up the enabled entity
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "-30"
+
+    attrs = state.attributes
+    assert attrs.get("peak_level") == -25
+    assert attrs.get("gain") == 12
+    assert attrs.get("mute") == "OFF"
+    assert attrs.get("tx_mute") == "OFF"
+
+
+async def test_audio_level_no_signal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test audio level sensor at no-signal threshold."""
+    mock_setup_entry.channels[1].audio_level = -120
+    mock_setup_entry.channels[1].audio_level_peak = -120
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = _get_entity_id(hass, "ch1_audio_level", mock_config_entry.entry_id)
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        entity_id,
+        disabled_by=None,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+    assert "peak_level" not in state.attributes
+
+
+async def test_audio_level_none_attributes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test audio level sensor when optional attributes are None/empty."""
+    mock_setup_entry.channels[1] = ChannelState(
+        name="Mic 1",
+        audio_level=-30,
+        audio_level_peak=-120,
+        audio_gain=None,
+        audio_mute="",
+        tx_mute_status="",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = _get_entity_id(hass, "ch1_audio_level", mock_config_entry.entry_id)
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        entity_id,
+        disabled_by=None,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "-30"
+    assert "peak_level" not in state.attributes
+    assert "gain" not in state.attributes
+    assert "mute" not in state.attributes
+    assert "tx_mute" not in state.attributes
 
 
 async def test_rf_level_empty_attributes(
@@ -193,10 +312,10 @@ async def test_rf_level_empty_attributes(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.mic_1_signal_strength")
+    entity_id = _get_entity_id(hass, "ch1_rf_level", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "-50"
-    # Empty strings should not appear as attributes
     assert "frequency" not in state.attributes
     assert "interference_status" not in state.attributes
 
@@ -215,112 +334,11 @@ async def test_channel_name_no_tx_attributes(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Channel name entity gets _2 suffix
-    state = hass.states.get("sensor.mic_1_2")
+    entity_id = _get_entity_id(hass, "ch1_name", mock_config_entry.entry_id)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert "tx_model" not in state.attributes
     assert "tx_device_id" not in state.attributes
-
-
-async def test_audio_level_sensor_enabled(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: MagicMock,
-) -> None:
-    """Test audio level sensor when enabled."""
-    from homeassistant.helpers import entity_registry as er
-
-    # First, set up so the entity is registered (but disabled)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Enable the disabled-by-default entity
-    entity_registry = er.async_get(hass)
-    entity_registry.async_update_entity(
-        "sensor.mic_1",
-        disabled_by=None,
-    )
-
-    # Reload to pick up the enabled entity
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.mic_1")
-    assert state is not None
-    assert state.state == "-30"
-
-    attrs = state.attributes
-    assert attrs.get("peak_level") == -25
-    assert attrs.get("gain") == 12
-    assert attrs.get("mute") == "OFF"
-    assert attrs.get("tx_mute") == "OFF"
-
-
-async def test_audio_level_no_signal(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: MagicMock,
-) -> None:
-    """Test audio level sensor at no-signal threshold."""
-    from homeassistant.helpers import entity_registry as er
-
-    mock_setup_entry.channels[1].audio_level = -120
-    mock_setup_entry.channels[1].audio_level_peak = -120
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    entity_registry.async_update_entity(
-        "sensor.mic_1",
-        disabled_by=None,
-    )
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.mic_1")
-    assert state is not None
-    assert state.state == "unknown"
-    assert "peak_level" not in state.attributes
-
-
-async def test_audio_level_none_attributes(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: MagicMock,
-) -> None:
-    """Test audio level sensor when optional attributes are None/empty."""
-    from homeassistant.helpers import entity_registry as er
-
-    mock_setup_entry.channels[1] = ChannelState(
-        name="Mic 1",
-        audio_level=-30,
-        audio_level_peak=-120,
-        audio_gain=None,
-        audio_mute="",
-        tx_mute_status="",
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    entity_registry.async_update_entity(
-        "sensor.mic_1",
-        disabled_by=None,
-    )
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.mic_1")
-    assert state is not None
-    assert state.state == "-30"
-    assert "peak_level" not in state.attributes
-    assert "gain" not in state.attributes
-    assert "mute" not in state.attributes
-    assert "tx_mute" not in state.attributes
 
 
 async def test_device_info(
