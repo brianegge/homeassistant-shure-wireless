@@ -13,7 +13,6 @@ from .const import DEFAULT_PORT, DOMAIN
 from .shure_client import ShureClient
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def _test_connection(hass: HomeAssistant, host: str, port: int) -> str:
