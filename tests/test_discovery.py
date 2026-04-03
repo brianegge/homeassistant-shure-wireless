@@ -10,7 +10,7 @@ class TestParseAcnAnnouncement:
     """Test parsing of ACN SLP multicast announcements."""
 
     SAMPLE_PAYLOAD = (
-        b"\x02\x07\x00\x01P\x00\x00\x00\x00\x00\"=\x00\x02en\x00\x00\x01;"
+        b'\x02\x07\x00\x01P\x00\x00\x00\x00\x00"=\x00\x02en\x00\x00\x01;'
         b"(cid=DDB0C8C5-0000-11DD-A000-000EDDCCCCCC),"
         b"(acn-fctn=SLXD4DE_RX),"
         b"(acn-uacn=SLXD4DE G57),"
@@ -73,11 +73,7 @@ class TestParseAcnAnnouncement:
 class TestDiscoveryProtocol:
     """Test the ShureDiscoveryProtocol."""
 
-    SAMPLE_PAYLOAD = (
-        b"(cid=DDB0C8C5-0000-11DD-A000-000EDDCCCCCC),"
-        b"(acn-fctn=SLXD4DE_RX),"
-        b"(acn-uacn=SLXD4DE G57)"
-    )
+    SAMPLE_PAYLOAD = b"(cid=DDB0C8C5-0000-11DD-A000-000EDDCCCCCC),(acn-fctn=SLXD4DE_RX),(acn-uacn=SLXD4DE G57)"
 
     def test_first_discovery_is_new(self):
         """Test that first discovery of a device is flagged as new."""

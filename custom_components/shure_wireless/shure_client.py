@@ -118,9 +118,16 @@ class ShureClient:
 
         # Request per-channel state (GET 0 ALL is not supported on SLXD4D+)
         channel_props = (
-            "CHAN_NAME", "FREQUENCY", "AUDIO_GAIN", "AUDIO_MUTE",
-            "TX_TYPE", "TX_DEVICE_ID", "TX_BATT_MINS",
-            "TX_BATT_BARS", "BATT_TYPE", "ENCRYPTION",
+            "CHAN_NAME",
+            "FREQUENCY",
+            "AUDIO_GAIN",
+            "AUDIO_MUTE",
+            "TX_TYPE",
+            "TX_DEVICE_ID",
+            "TX_BATT_MINS",
+            "TX_BATT_BARS",
+            "BATT_TYPE",
+            "ENCRYPTION",
         )
         for ch in range(1, self.num_channels + 1):
             for prop in channel_props:
