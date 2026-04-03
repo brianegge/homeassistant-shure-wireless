@@ -65,6 +65,12 @@
       },
       "channel_name": {
         "name": "Channel name"
+      },
+      "frequency": {
+        "name": "Frequency"
+      },
+      "battery_health": {
+        "name": "Battery health"
       }
     }
   }

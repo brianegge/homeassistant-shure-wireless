@@ -11,7 +11,7 @@ set_channel_name:
           integration: shure_wireless
     name:
       name: Name
-      description: The new channel name (max 31 characters).
+      description: The new channel name (max 8 characters).
       required: true
       example: "Wireless 3"
       selector:
