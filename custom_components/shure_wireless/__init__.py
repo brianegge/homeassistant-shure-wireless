@@ -14,13 +14,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, HEARTBEAT_INTERVAL, PLATFORMS
+from .discovery import ShureDeviceInfo, create_discovery_listener
+from .shure_client import ShureClient
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.Any({}, None))},
     extra=vol.ALLOW_EXTRA,
 )
-from .discovery import ShureDeviceInfo, create_discovery_listener
-from .shure_client import ShureClient
 
 _LOGGER = logging.getLogger(__name__)
 

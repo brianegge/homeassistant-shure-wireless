@@ -1,9 +1,6 @@
 """Tests for Shure ACN multicast discovery."""
 
-import pytest
-
 from custom_components.shure_wireless.discovery import (
-    ShureDeviceInfo,
     ShureDiscoveryProtocol,
     _parse_acn_announcement,
 )
