@@ -75,7 +75,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "connection_refused"}
 
 
 async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
@@ -222,7 +222,7 @@ async def test_reconfigure_flow_cannot_connect(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "connection_refused"}
 
 
 async def test_test_connection_function(hass: HomeAssistant) -> None:
