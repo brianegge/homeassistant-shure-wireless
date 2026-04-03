@@ -36,9 +36,7 @@ async def test_setup_entry_connection_refused(
 ) -> None:
     """Test setup retries when connection is refused."""
     mock_client = make_mock_client(connected=False)
-    mock_client.connect = AsyncMock(
-        side_effect=ConnectionRefusedError("Connection refused")
-    )
+    mock_client.connect = AsyncMock(side_effect=ConnectionRefusedError("Connection refused"))
 
     with patch(
         "custom_components.shure_wireless.ShureClient",
@@ -95,9 +93,7 @@ async def test_setup_registers_device(
     await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, mock_config_entry.entry_id)})
 
     assert device is not None
     assert device.manufacturer == "Shure"
@@ -163,9 +159,7 @@ async def test_coordinator_reconnect_failure(
 
     # Simulate disconnection and failed reconnect
     mock_setup_entry.connected = False
-    mock_setup_entry.connect = AsyncMock(
-        side_effect=ConnectionRefusedError("Connection refused")
-    )
+    mock_setup_entry.connect = AsyncMock(side_effect=ConnectionRefusedError("Connection refused"))
 
     coordinator = mock_config_entry.runtime_data.coordinator
     await coordinator.async_refresh()
@@ -183,9 +177,7 @@ async def test_coordinator_heartbeat_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_setup_entry.send_command = AsyncMock(
-        side_effect=OSError("Connection reset")
-    )
+    mock_setup_entry.send_command = AsyncMock(side_effect=OSError("Connection reset"))
 
     coordinator = mock_config_entry.runtime_data.coordinator
     await coordinator.async_refresh()
@@ -227,9 +219,7 @@ async def test_coordinator_logs_reconnect(
     coordinator = mock_config_entry.runtime_data.coordinator
 
     # First, mark as unavailable via heartbeat failure
-    mock_setup_entry.send_command = AsyncMock(
-        side_effect=OSError("Connection reset")
-    )
+    mock_setup_entry.send_command = AsyncMock(side_effect=OSError("Connection reset"))
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

@@ -355,9 +355,7 @@ async def test_device_info(
     from custom_components.shure_wireless.const import DOMAIN
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_ch1")}
-    )
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_ch1")})
     assert device is not None
     assert device.manufacturer == "Shure"
     assert device.model == "SLXD1"
