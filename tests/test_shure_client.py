@@ -246,22 +246,28 @@ class TestSampleParsing:
         self.client.register_callback(self.callback)
 
     def test_sample_parsing(self):
-        # Format after _process_line splits: parts = [ch, ALL, ?, peak, rms, rf]
-        # Code uses parts[3]=peak, parts[4]=rms, parts[5]=rf
-        self.client._process_line("SAMPLE 1 ALL 000 095 080 070")
+        # SLXD format: SAMPLE <ch> ALL <rf> <audio_peak> <audio_rms>
+        self.client._process_line("SAMPLE 1 ALL 070 095 080")
+        assert self.client.channels[1].rf_level == -50  # 70 - 120
         assert self.client.channels[1].audio_level_peak == -25  # 95 - 120
         assert self.client.channels[1].audio_level == -40  # 80 - 120
-        assert self.client.channels[1].rf_level == -50  # 70 - 120
 
     def test_sample_channel_2(self):
-        self.client._process_line("SAMPLE 2 ALL 000 100 090 060")
-        assert self.client.channels[2].audio_level_peak == -20
-        assert self.client.channels[2].audio_level == -30
-        assert self.client.channels[2].rf_level == -60
+        self.client._process_line("SAMPLE 2 ALL 060 100 090")
+        assert self.client.channels[2].rf_level == -60  # 60 - 120
+        assert self.client.channels[2].audio_level_peak == -20  # 100 - 120
+        assert self.client.channels[2].audio_level == -30  # 90 - 120
+
+    def test_sample_real_device_data(self):
+        """Test with actual data captured from SLXD4DE receiver."""
+        self.client._process_line("SAMPLE 1 ALL 005 020 015")
+        assert self.client.channels[1].rf_level == -115  # 5 - 120
+        assert self.client.channels[1].audio_level_peak == -100  # 20 - 120
+        assert self.client.channels[1].audio_level == -105  # 15 - 120
 
     def test_sample_unknown_channel(self):
         """SAMPLE for non-existent channel should be ignored."""
-        self.client._process_line("SAMPLE 9 ALL 100 090 060 000")
+        self.client._process_line("SAMPLE 9 ALL 060 100 090")
         self.callback.assert_not_called()
 
     def test_sample_too_short(self):
@@ -269,11 +275,11 @@ class TestSampleParsing:
         self.callback.assert_not_called()
 
     def test_sample_callback(self):
-        self.client._process_line("SAMPLE 1 ALL 000 100 090 060")
+        self.client._process_line("SAMPLE 1 ALL 060 100 090")
         self.callback.assert_called_once()
 
     def test_sample_invalid_channel(self):
-        self.client._process_line("SAMPLE XX ALL 100 090 060 000")
+        self.client._process_line("SAMPLE XX ALL 060 100 090")
         self.callback.assert_not_called()
 
 
@@ -364,8 +370,8 @@ class TestConnect:
             await client.connect()
             assert client.connected is True
             assert client._listen_task is not None
-            # Should have sent GET 0 ALL and SET 0 METER_RATE
-            assert writer.write.call_count == 2
+            # Should have sent receiver GETs + per-channel GETs + SET METER_RATE
+            assert writer.write.call_count > 2
 
             await client.disconnect()
             assert client.connected is False

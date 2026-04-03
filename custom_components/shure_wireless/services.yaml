@@ -1,0 +1,18 @@
+set_channel_name:
+  name: Set channel name
+  description: Set the name of a channel on a Shure wireless receiver.
+  fields:
+    device_id:
+      name: Device
+      description: The Shure channel device to rename.
+      required: true
+      selector:
+        device:
+          integration: shure_wireless
+    name:
+      name: Name
+      description: The new channel name (max 31 characters).
+      required: true
+      example: "Wireless 3"
+      selector:
+        text:

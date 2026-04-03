@@ -110,8 +110,19 @@ class ShureBatteryLevelSensor(ShureSensorBase):
 
     @property
     def native_value(self) -> int | None:
-        """Return battery charge percentage."""
-        return self._channel.battery_charge
+        """Return battery charge percentage.
+
+        Falls back to estimating from battery bars when charge percentage
+        is not available (common on SLX-D transmitters with AA batteries).
+        """
+        charge = self._channel.battery_charge
+        if charge is not None:
+            return charge
+        # Derive approximate percentage from battery bars (1-5)
+        bars = self._channel.battery_bars
+        if bars is not None:
+            return bars * 20
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

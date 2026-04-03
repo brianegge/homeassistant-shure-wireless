@@ -35,49 +35,49 @@ class ShureWirelessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _discovered_host: str | None = None
     _discovered_port: int = DEFAULT_PORT
     _discovered_name: str = ""
+    _discovered_model: str = ""
+    _discovered_num_channels: int = 1
 
-    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
-        """Handle zeroconf discovery of a Shure device."""
-        host = discovery_info.host
-        port = discovery_info.port or DEFAULT_PORT
+    async def async_step_discovery(self, discovery_info: dict[str, Any]) -> ConfigFlowResult:
+        """Handle ACN multicast discovery of a Shure device."""
+        host = discovery_info["host"]
+        cid = discovery_info["cid"]
+        model = discovery_info.get("model", "")
+        name = discovery_info.get("name", "")
+        num_channels = discovery_info.get("num_channels", 1)
 
-        # Use hostname (without .local.) as unique ID
-        device_id = discovery_info.hostname.removesuffix(".").removesuffix(".local")
-
-        await self.async_set_unique_id(device_id)
-        self._abort_if_unique_id_configured(updates={"host": host, "port": port})
+        await self.async_set_unique_id(cid)
+        self._abort_if_unique_id_configured(updates={"host": host})
 
         self._discovered_host = host
-        self._discovered_port = port
-        self._discovered_name = discovery_info.name.split(".")[0]
+        self._discovered_name = name
+        self._discovered_model = model
+        self._discovered_num_channels = num_channels
 
-        self.context["title_placeholders"] = {"name": self._discovered_name}
+        self.context["title_placeholders"] = {"name": name or model}
 
-        return await self.async_step_zeroconf_confirm()
+        return await self.async_step_discovery_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Confirm zeroconf discovery."""
+    async def async_step_discovery_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Confirm ACN discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=f"Shure Wireless ({self._discovered_host})",
+                title=f"Shure {self._discovered_model} ({self._discovered_name})",
                 data={
                     "host": self._discovered_host,
-                    "port": self._discovered_port,
-                    "num_channels": user_input.get("num_channels", 1),
+                    "port": DEFAULT_PORT,
+                    "num_channels": self._discovered_num_channels,
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
-            step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("num_channels", default=1): vol.In({1: "1", 2: "2", 4: "4"}),
-                }
-            ),
+            step_id="discovery_confirm",
+            data_schema=vol.Schema({}),
             description_placeholders={
                 "host": self._discovered_host or "",
                 "name": self._discovered_name,
+                "model": self._discovered_model,
+                "num_channels": str(self._discovered_num_channels),
             },
         )
 
@@ -92,6 +92,8 @@ class ShureWirelessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 device_id = await _test_connection(self.hass, host, port)
+            except ConnectionRefusedError:
+                errors["base"] = "connection_refused"
             except Exception:
                 errors["base"] = "cannot_connect"
             else:
@@ -130,6 +132,8 @@ class ShureWirelessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 device_id = await _test_connection(self.hass, host, port)
+            except ConnectionRefusedError:
+                errors["base"] = "connection_refused"
             except Exception:
                 errors["base"] = "cannot_connect"
             else:
