@@ -1,5 +1,29 @@
 {
   "entity": {
+    "binary_sensor": {
+      "tx_mute": {
+        "default": "mdi:microphone-off"
+      },
+      "audio_mute": {
+        "default": "mdi:volume-off"
+      },
+      "interference": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "encryption_warning": {
+        "default": "mdi:lock-alert"
+      }
+    },
+    "button": {
+      "flash": {
+        "default": "mdi:flash"
+      }
+    },
+    "number": {
+      "audio_gain_control": {
+        "default": "mdi:knob"
+      }
+    },
     "sensor": {
       "battery_level": {
         "default": "mdi:battery",
@@ -34,6 +58,35 @@
       },
       "battery_health": {
         "default": "mdi:battery-heart-variant"
+      },
+      "audio_gain": {
+        "default": "mdi:knob"
+      },
+      "feedback_reduction": {
+        "default": "mdi:microphone-settings"
+      },
+      "antenna": {
+        "default": "mdi:antenna"
+      },
+      "tx_rf_power": {
+        "default": "mdi:access-point"
+      },
+      "tx_offset": {
+        "default": "mdi:tune-vertical"
+      },
+      "squelch": {
+        "default": "mdi:volume-low"
+      },
+      "rf_band": {
+        "default": "mdi:radio-tower"
+      }
+    },
+    "switch": {
+      "audio_mute_control": {
+        "default": "mdi:volume-off"
+      },
+      "panel_lock": {
+        "default": "mdi:lock"
       }
     }
   }

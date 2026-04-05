@@ -23,6 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ShureConfigEntry, ShureCoordinator
 from .const import DOMAIN
+from .entity import ShureEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,52 +51,23 @@ async def async_setup_entry(
                 ShureChannelNameSensor(coordinator, entry, ch_num),
                 ShureFrequencySensor(coordinator, entry, ch_num),
                 ShureBatteryHealthSensor(coordinator, entry, ch_num),
+                ShureGainSensor(coordinator, entry, ch_num),
+                ShureFeedbackReductionSensor(coordinator, entry, ch_num),
+                ShureAntennaSensor(coordinator, entry, ch_num),
+                ShureTxPowerSensor(coordinator, entry, ch_num),
+                ShureTxOffsetSensor(coordinator, entry, ch_num),
+                ShureSquelchSensor(coordinator, entry, ch_num),
             ]
         )
+
+    # Receiver-level sensor (not per-channel)
+    entities.append(ShureRfBandSensor(coordinator, entry))
 
     async_add_entities(entities)
 
 
-class ShureSensorBase(CoordinatorEntity[ShureCoordinator], SensorEntity):
+class ShureSensorBase(ShureEntity, SensorEntity):
     """Base class for Shure sensors."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: ShureCoordinator,
-        entry: ShureConfigEntry,
-        channel_num: int,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._channel_num = channel_num
-        self._client = coordinator.client
-        self._entry = entry
-
-    @property
-    def _channel(self):
-        """Return the channel state."""
-        return self._client.channels[self._channel_num]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this channel."""
-        channel = self._channel
-        name = channel.name or f"Channel {self._channel_num}"
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{self._entry.entry_id}_ch{self._channel_num}")},
-            name=f"{name}",
-            manufacturer="Shure",
-            model=channel.tx_model or "Wireless Transmitter",
-            sw_version=channel.tx_fw_ver or None,
-            via_device=(DOMAIN, self._entry.entry_id),
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if the sensor is available."""
-        return self._client.connected and super().available
 
 
 class ShureBatteryLevelSensor(ShureSensorBase):
@@ -360,3 +332,176 @@ class ShureBatteryHealthSensor(ShureSensorBase):
         if channel.battery_cycle is not None:
             attrs["cycle_count"] = channel.battery_cycle
         return attrs
+
+
+class ShureGainSensor(ShureSensorBase):
+    """Audio gain sensor."""
+
+    _attr_native_unit_of_measurement = "dB"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "audio_gain"
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_audio_gain"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return audio gain in dB."""
+        return self._channel.audio_gain
+
+
+class ShureFeedbackReductionSensor(ShureSensorBase):
+    """Feedback reduction (FD_MODE) status sensor."""
+
+    _attr_translation_key = "feedback_reduction"
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_feedback_reduction"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return feedback reduction status."""
+        return self._channel.fd_mode or None
+
+
+class ShureAntennaSensor(ShureSensorBase):
+    """Antenna diversity status sensor."""
+
+    _attr_translation_key = "antenna"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_antenna"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return active antenna (A, B, AB, or XX for unknown)."""
+        ant = self._channel.antenna
+        return ant if ant != "XX" else None
+
+
+class ShureTxPowerSensor(ShureSensorBase):
+    """Transmitter RF power level sensor."""
+
+    _attr_translation_key = "tx_rf_power"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_tx_rf_power"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return TX RF power level."""
+        return self._channel.tx_rf_power or None
+
+
+class ShureTxOffsetSensor(ShureSensorBase):
+    """Transmitter audio offset sensor."""
+
+    _attr_native_unit_of_measurement = "dB"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "tx_offset"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_tx_offset"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return TX audio offset in dB."""
+        return self._channel.tx_offset
+
+
+class ShureSquelchSensor(ShureSensorBase):
+    """Squelch level sensor."""
+
+    _attr_native_unit_of_measurement = "dB"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "squelch"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_squelch"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return squelch level."""
+        return self._channel.squelch
+
+
+class ShureRfBandSensor(CoordinatorEntity[ShureCoordinator], SensorEntity):
+    """RF band sensor (receiver-level)."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "rf_band"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        self._client = coordinator.client
+        self._entry = entry
+        self._attr_unique_id = f"{entry.entry_id}_rf_band"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for the receiver."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._entry.entry_id)},
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if the sensor is available."""
+        return self._client.connected and super().available
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the RF band."""
+        return self._client.receiver.rf_band or None

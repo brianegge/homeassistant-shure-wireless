@@ -101,3 +101,79 @@ class TestBatteryRuntimeValues:
     def test_runtime_none(self):
         channel = ChannelState()
         assert channel.battery_runtime is None
+
+
+class TestGainValues:
+    """Test gain sensor value logic."""
+
+    def test_gain_normal(self):
+        channel = ChannelState(audio_gain=12)
+        assert channel.audio_gain == 12
+
+    def test_gain_none(self):
+        channel = ChannelState()
+        assert channel.audio_gain is None
+
+
+class TestFeedbackReductionValues:
+    """Test feedback reduction sensor value logic."""
+
+    def test_fd_mode_on(self):
+        channel = ChannelState(fd_mode="ON")
+        assert channel.fd_mode == "ON"
+
+    def test_fd_mode_off(self):
+        channel = ChannelState(fd_mode="OFF")
+        assert channel.fd_mode == "OFF"
+
+    def test_fd_mode_default(self):
+        channel = ChannelState()
+        assert channel.fd_mode == ""
+
+
+class TestAntennaValues:
+    """Test antenna sensor value logic."""
+
+    def test_antenna_ab(self):
+        channel = ChannelState(antenna="AB")
+        assert channel.antenna == "AB"
+
+    def test_antenna_default(self):
+        channel = ChannelState()
+        assert channel.antenna == "XX"
+
+
+class TestTxPowerValues:
+    """Test TX power sensor value logic."""
+
+    def test_tx_power_normal(self):
+        channel = ChannelState(tx_rf_power="NORMAL")
+        assert channel.tx_rf_power == "NORMAL"
+
+    def test_tx_power_default(self):
+        channel = ChannelState()
+        assert channel.tx_rf_power == ""
+
+
+class TestTxOffsetValues:
+    """Test TX offset sensor value logic."""
+
+    def test_tx_offset_value(self):
+        channel = ChannelState(tx_offset=10)
+        assert channel.tx_offset == 10
+
+    def test_tx_offset_none(self):
+        channel = ChannelState()
+        assert channel.tx_offset is None
+
+
+class TestSquelchValues:
+    """Test squelch sensor value logic."""
+
+    def test_squelch_value(self):
+        channel = ChannelState(squelch=5)
+        assert channel.squelch == 5
+
+    def test_squelch_none(self):
+        channel = ChannelState()
+        assert channel.squelch is None
