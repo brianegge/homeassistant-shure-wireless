@@ -41,7 +41,6 @@ class ChannelState:
     audio_mute: str = ""
     interference_status: str = ""
     encryption_status: str = ""
-    fd_mode: str = ""
 
 
 @dataclass
@@ -137,7 +136,6 @@ class ShureClient:
             "BATT_HEALTH",
             "BATT_CYCLE",
             "ENCRYPTION",
-            "FD_MODE",
         )
         for ch in range(1, self.num_channels + 1):
             for prop in channel_props:
@@ -344,8 +342,6 @@ class ShureClient:
             channel.interference_status = "DETECTED" if value == "CRITICAL" else value
         elif key == "ENCRYPTION":
             channel.encryption_status = "OK" if value == "OFF" else value
-        elif key == "FD_MODE":
-            channel.fd_mode = cleaned
         elif key in ("MUTE_STATUS", "MUTE_MODE_STATUS"):
             if value == "ON":
                 channel.tx_mute_status = "OFF"
