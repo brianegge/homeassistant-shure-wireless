@@ -17,9 +17,12 @@ from homeassistant.const import (
     UnitOfFrequency,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ShureConfigEntry, ShureCoordinator
+from .const import DOMAIN
 from .entity import ShureEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,9 +57,11 @@ async def async_setup_entry(
                 ShureTxPowerSensor(coordinator, entry, ch_num),
                 ShureTxOffsetSensor(coordinator, entry, ch_num),
                 ShureSquelchSensor(coordinator, entry, ch_num),
-                ShureRfBandSensor(coordinator, entry, ch_num),
             ]
         )
+
+    # Receiver-level sensor (not per-channel)
+    entities.append(ShureRfBandSensor(coordinator, entry))
 
     async_add_entities(entities)
 
@@ -466,9 +471,10 @@ class ShureSquelchSensor(ShureSensorBase):
         return self._channel.squelch
 
 
-class ShureRfBandSensor(ShureSensorBase):
-    """RF band sensor (receiver-level, shown per channel for visibility)."""
+class ShureRfBandSensor(CoordinatorEntity[ShureCoordinator], SensorEntity):
+    """RF band sensor (receiver-level)."""
 
+    _attr_has_entity_name = True
     _attr_translation_key = "rf_band"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -476,11 +482,24 @@ class ShureRfBandSensor(ShureSensorBase):
         self,
         coordinator: ShureCoordinator,
         entry: ShureConfigEntry,
-        channel_num: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, channel_num)
-        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_rf_band"
+        super().__init__(coordinator)
+        self._client = coordinator.client
+        self._entry = entry
+        self._attr_unique_id = f"{entry.entry_id}_rf_band"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for the receiver."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._entry.entry_id)},
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if the sensor is available."""
+        return self._client.connected and super().available
 
     @property
     def native_value(self) -> str | None:

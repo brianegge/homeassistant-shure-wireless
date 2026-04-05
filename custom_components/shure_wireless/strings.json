@@ -120,7 +120,7 @@
     },
     "switch": {
       "audio_mute_control": {
-        "name": "Audio mute"
+        "name": "Audio mute control"
       },
       "panel_lock": {
         "name": "Panel lock"

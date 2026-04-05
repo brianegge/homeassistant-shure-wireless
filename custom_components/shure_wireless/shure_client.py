@@ -355,9 +355,11 @@ class ShureClient:
         elif key == "TX_RF_PWR":
             channel.tx_rf_power = cleaned
         elif key == "TX_OFFSET":
-            channel.tx_offset = int(value)
+            with contextlib.suppress(ValueError):
+                channel.tx_offset = int(cleaned)
         elif key == "SQUELCH":
-            channel.squelch = int(value)
+            with contextlib.suppress(ValueError):
+                channel.squelch = int(cleaned)
         elif key in ("MUTE_STATUS", "MUTE_MODE_STATUS"):
             if value == "ON":
                 channel.tx_mute_status = "OFF"
