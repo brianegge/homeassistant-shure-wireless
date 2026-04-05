@@ -1,5 +1,10 @@
 {
   "entity": {
+    "number": {
+      "audio_gain_control": {
+        "default": "mdi:knob"
+      }
+    },
     "sensor": {
       "battery_level": {
         "default": "mdi:battery",
@@ -34,6 +39,12 @@
       },
       "battery_health": {
         "default": "mdi:battery-heart-variant"
+      },
+      "audio_gain": {
+        "default": "mdi:knob"
+      },
+      "feedback_reduction": {
+        "default": "mdi:microphone-off"
       }
     }
   }

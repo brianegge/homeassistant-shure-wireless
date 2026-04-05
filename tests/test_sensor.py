@@ -101,3 +101,31 @@ class TestBatteryRuntimeValues:
     def test_runtime_none(self):
         channel = ChannelState()
         assert channel.battery_runtime is None
+
+
+class TestGainValues:
+    """Test gain sensor value logic."""
+
+    def test_gain_normal(self):
+        channel = ChannelState(audio_gain=12)
+        assert channel.audio_gain == 12
+
+    def test_gain_none(self):
+        channel = ChannelState()
+        assert channel.audio_gain is None
+
+
+class TestFeedbackReductionValues:
+    """Test feedback reduction sensor value logic."""
+
+    def test_fd_mode_on(self):
+        channel = ChannelState(fd_mode="ON")
+        assert channel.fd_mode == "ON"
+
+    def test_fd_mode_off(self):
+        channel = ChannelState(fd_mode="OFF")
+        assert channel.fd_mode == "OFF"
+
+    def test_fd_mode_default(self):
+        channel = ChannelState()
+        assert channel.fd_mode == ""

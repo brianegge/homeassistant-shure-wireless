@@ -50,6 +50,8 @@ async def async_setup_entry(
                 ShureChannelNameSensor(coordinator, entry, ch_num),
                 ShureFrequencySensor(coordinator, entry, ch_num),
                 ShureBatteryHealthSensor(coordinator, entry, ch_num),
+                ShureGainSensor(coordinator, entry, ch_num),
+                ShureFeedbackReductionSensor(coordinator, entry, ch_num),
             ]
         )
 
@@ -360,3 +362,47 @@ class ShureBatteryHealthSensor(ShureSensorBase):
         if channel.battery_cycle is not None:
             attrs["cycle_count"] = channel.battery_cycle
         return attrs
+
+
+class ShureGainSensor(ShureSensorBase):
+    """Audio gain sensor."""
+
+    _attr_native_unit_of_measurement = "dB"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "audio_gain"
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_audio_gain"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return audio gain in dB."""
+        return self._channel.audio_gain
+
+
+class ShureFeedbackReductionSensor(ShureSensorBase):
+    """Feedback reduction (FD_MODE) status sensor."""
+
+    _attr_translation_key = "feedback_reduction"
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_feedback_reduction"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return feedback reduction status."""
+        return self._channel.fd_mode or None
