@@ -42,6 +42,9 @@ class ChannelState:
     interference_status: str = ""
     encryption_status: str = ""
     fd_mode: str = ""
+    tx_rf_power: str = ""
+    tx_offset: int | None = None  # dB
+    squelch: int | None = None  # dB
 
 
 @dataclass
@@ -117,7 +120,7 @@ class ShureClient:
         self._listen_task = asyncio.create_task(self._listen())
 
         # Request receiver-level state
-        for prop in ("MODEL", "FW_VER", "DEVICE_ID", "RF_BAND", "ENCRYPTION"):
+        for prop in ("MODEL", "FW_VER", "DEVICE_ID", "RF_BAND", "ENCRYPTION", "LOCK_STATUS"):
             await self.send_command(f"GET {prop}")
 
         # Request per-channel state (GET 0 ALL is not supported on SLXD4D+)
@@ -138,6 +141,9 @@ class ShureClient:
             "BATT_CYCLE",
             "ENCRYPTION",
             "FD_MODE",
+            "TX_RF_PWR",
+            "TX_OFFSET",
+            "SQUELCH",
         )
         for ch in range(1, self.num_channels + 1):
             for prop in channel_props:
@@ -346,6 +352,12 @@ class ShureClient:
             channel.encryption_status = "OK" if value == "OFF" else value
         elif key == "FD_MODE":
             channel.fd_mode = cleaned
+        elif key == "TX_RF_PWR":
+            channel.tx_rf_power = cleaned
+        elif key == "TX_OFFSET":
+            channel.tx_offset = int(value)
+        elif key == "SQUELCH":
+            channel.squelch = int(value)
         elif key in ("MUTE_STATUS", "MUTE_MODE_STATUS"):
             if value == "ON":
                 channel.tx_mute_status = "OFF"
