@@ -50,6 +50,11 @@
     }
   },
   "entity": {
+    "number": {
+      "audio_gain_control": {
+        "name": "Gain"
+      }
+    },
     "sensor": {
       "battery_level": {
         "name": "Battery"
@@ -71,6 +76,12 @@
       },
       "battery_health": {
         "name": "Battery health"
+      },
+      "audio_gain": {
+        "name": "Gain"
+      },
+      "feedback_reduction": {
+        "name": "Feedback reduction"
       }
     }
   }
