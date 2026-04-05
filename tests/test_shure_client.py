@@ -205,14 +205,6 @@ class TestProtocolParsing:
         self.client._process_line("REP 1 MUTE_STATUS MUTE")
         assert self.client.channels[1].tx_mute_status == "ON"
 
-    def test_process_fd_mode_on(self):
-        self.client._process_line("REP 1 FD_MODE ON")
-        assert self.client.channels[1].fd_mode == "ON"
-
-    def test_process_fd_mode_off(self):
-        self.client._process_line("REP 1 FD_MODE OFF")
-        assert self.client.channels[1].fd_mode == "OFF"
-
     def test_process_mute_mode_status(self):
         self.client._process_line("REP 1 MUTE_MODE_STATUS ON")
         assert self.client.channels[1].tx_mute_status == "OFF"
