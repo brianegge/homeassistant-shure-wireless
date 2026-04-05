@@ -50,25 +50,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "tx_mute": {
-        "name": "TX mute"
-      },
-      "audio_mute": {
-        "name": "Audio mute"
-      },
-      "interference": {
-        "name": "RF interference"
-      },
-      "encryption_warning": {
-        "name": "Encryption warning"
-      }
-    },
-    "button": {
-      "flash": {
-        "name": "Flash"
-      }
-    },
     "number": {
       "audio_gain_control": {
         "name": "Gain"
@@ -101,29 +82,6 @@
       },
       "feedback_reduction": {
         "name": "Feedback reduction"
-      },
-      "antenna": {
-        "name": "Antenna"
-      },
-      "tx_rf_power": {
-        "name": "TX power"
-      },
-      "tx_offset": {
-        "name": "TX offset"
-      },
-      "squelch": {
-        "name": "Squelch"
-      },
-      "rf_band": {
-        "name": "RF band"
-      }
-    },
-    "switch": {
-      "audio_mute_control": {
-        "name": "Audio mute"
-      },
-      "panel_lock": {
-        "name": "Panel lock"
       }
     }
   }

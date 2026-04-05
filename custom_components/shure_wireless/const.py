@@ -10,4 +10,4 @@ DEFAULT_PORT: Final = 2202
 
 HEARTBEAT_INTERVAL: Final = 60
 
-PLATFORMS: Final[list[str]] = ["binary_sensor", "button", "number", "sensor", "switch"]
+PLATFORMS: Final[list[str]] = ["number", "sensor"]

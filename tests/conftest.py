@@ -83,9 +83,6 @@ def make_mock_client(
             interference_status="NONE",
             encryption_status="OK",
             fd_mode="ON",
-            tx_rf_power="NORMAL",
-            tx_offset=0,
-            squelch=5,
         )
 
     client.connect = AsyncMock()
