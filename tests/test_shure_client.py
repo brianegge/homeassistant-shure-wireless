@@ -25,6 +25,10 @@ class TestChannelState:
         assert state.battery_bars is None
         assert state.battery_charge is None
         assert state.battery_runtime is None
+        assert state.fd_mode == ""
+        assert state.tx_rf_power == ""
+        assert state.tx_offset is None
+        assert state.squelch is None
 
 
 class TestReceiverState:
@@ -212,6 +216,22 @@ class TestProtocolParsing:
     def test_process_fd_mode_off(self):
         self.client._process_line("REP 1 FD_MODE OFF")
         assert self.client.channels[1].fd_mode == "OFF"
+
+    def test_process_tx_rf_power(self):
+        self.client._process_line("REP 1 TX_RF_PWR NORMAL")
+        assert self.client.channels[1].tx_rf_power == "NORMAL"
+
+    def test_process_tx_rf_power_low(self):
+        self.client._process_line("REP 1 TX_RF_PWR LOW")
+        assert self.client.channels[1].tx_rf_power == "LOW"
+
+    def test_process_tx_offset(self):
+        self.client._process_line("REP 1 TX_OFFSET 10")
+        assert self.client.channels[1].tx_offset == 10
+
+    def test_process_squelch(self):
+        self.client._process_line("REP 1 SQUELCH 5")
+        assert self.client.channels[1].squelch == 5
 
     def test_process_mute_mode_status(self):
         self.client._process_line("REP 1 MUTE_MODE_STATUS ON")

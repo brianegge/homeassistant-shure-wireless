@@ -52,6 +52,11 @@ async def async_setup_entry(
                 ShureBatteryHealthSensor(coordinator, entry, ch_num),
                 ShureGainSensor(coordinator, entry, ch_num),
                 ShureFeedbackReductionSensor(coordinator, entry, ch_num),
+                ShureAntennaSensor(coordinator, entry, ch_num),
+                ShureTxPowerSensor(coordinator, entry, ch_num),
+                ShureTxOffsetSensor(coordinator, entry, ch_num),
+                ShureSquelchSensor(coordinator, entry, ch_num),
+                ShureRfBandSensor(coordinator, entry, ch_num),
             ]
         )
 
@@ -406,3 +411,118 @@ class ShureFeedbackReductionSensor(ShureSensorBase):
     def native_value(self) -> str | None:
         """Return feedback reduction status."""
         return self._channel.fd_mode or None
+
+
+class ShureAntennaSensor(ShureSensorBase):
+    """Antenna diversity status sensor."""
+
+    _attr_translation_key = "antenna"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_antenna"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return active antenna (A, B, AB, or XX for unknown)."""
+        ant = self._channel.antenna
+        return ant if ant != "XX" else None
+
+
+class ShureTxPowerSensor(ShureSensorBase):
+    """Transmitter RF power level sensor."""
+
+    _attr_translation_key = "tx_rf_power"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_tx_rf_power"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return TX RF power level."""
+        return self._channel.tx_rf_power or None
+
+
+class ShureTxOffsetSensor(ShureSensorBase):
+    """Transmitter audio offset sensor."""
+
+    _attr_native_unit_of_measurement = "dB"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "tx_offset"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_tx_offset"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return TX audio offset in dB."""
+        return self._channel.tx_offset
+
+
+class ShureSquelchSensor(ShureSensorBase):
+    """Squelch level sensor."""
+
+    _attr_native_unit_of_measurement = "dB"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "squelch"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_squelch"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return squelch level."""
+        return self._channel.squelch
+
+
+class ShureRfBandSensor(ShureSensorBase):
+    """RF band sensor (receiver-level, shown per channel for visibility)."""
+
+    _attr_translation_key = "rf_band"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_rf_band"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the RF band."""
+        return self._client.receiver.rf_band or None
