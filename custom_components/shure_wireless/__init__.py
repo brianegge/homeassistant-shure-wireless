@@ -113,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     async def async_set_channel_name(call: ServiceCall) -> None:
         """Set the channel name on a Shure receiver."""
         device_id = call.data["device_id"]
-        new_name = call.data["name"][:31]
+        new_name = call.data["name"][:8]
 
         device_registry = dr.async_get(hass)
         device = device_registry.async_get(device_id)

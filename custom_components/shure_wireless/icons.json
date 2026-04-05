@@ -28,6 +28,12 @@
       },
       "channel_name": {
         "default": "mdi:tag-text-outline"
+      },
+      "frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "battery_health": {
+        "default": "mdi:battery-heart-variant"
       }
     }
   }

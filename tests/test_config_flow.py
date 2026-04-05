@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
@@ -10,20 +9,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.shure_wireless.const import DOMAIN
+from custom_components.shure_wireless.const import DEFAULT_PORT, DOMAIN
 
 from .conftest import MOCK_CONFIG, MOCK_DEVICE_ID, MOCK_HOST, MOCK_PORT
 
-MOCK_ZEROCONF_INFO = SimpleNamespace(
-    ip_address=None,
-    ip_addresses=[],
-    hostname="SLXD4DE-001.local.",
-    name="Shure SLXD4DE._shure-slxd._tcp.local.",
-    host=MOCK_HOST,
-    port=MOCK_PORT,
-    properties={},
-    type="_shure-slxd._tcp.local.",
-)
+MOCK_DISCOVERY_INFO = {
+    "host": MOCK_HOST,
+    "cid": "SLXD4DE-001",
+    "model": "SLXD4DE",
+    "name": "Studio A",
+    "num_channels": 2,
+}
 
 
 def _mock_test_connection(device_id: str = MOCK_DEVICE_ID):
@@ -40,9 +36,7 @@ def _mock_test_connection(device_id: str = MOCK_DEVICE_ID):
 
 async def test_user_flow_shows_form(hass: HomeAssistant) -> None:
     """Test that the user flow shows a form initially."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
@@ -50,9 +44,7 @@ async def test_user_flow_shows_form(hass: HomeAssistant) -> None:
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test successful manual config flow creates entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
 
     with _mock_test_connection():
         result = await hass.config_entries.flow.async_configure(
@@ -71,9 +63,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user flow shows error on connection failure."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
 
     with patch(
         "custom_components.shure_wireless.config_flow._test_connection",
@@ -90,14 +80,12 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "connection_refused"}
 
 
 async def test_user_flow_timeout(hass: HomeAssistant) -> None:
     """Test user flow shows error on timeout."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
 
     with patch(
         "custom_components.shure_wireless.config_flow._test_connection",
@@ -122,9 +110,7 @@ async def test_user_flow_already_configured(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user flow aborts if device already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
 
     with _mock_test_connection():
         result = await hass.config_entries.flow.async_configure(
@@ -140,44 +126,44 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-# ===== Zeroconf discovery tests =====
+# ===== Discovery tests =====
 
 
-async def test_zeroconf_flow_shows_confirm(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery shows confirmation form."""
+async def test_discovery_flow_shows_confirm(hass: HomeAssistant) -> None:
+    """Test ACN discovery shows confirmation form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=MOCK_ZEROCONF_INFO,
+        context={"source": "discovery"},
+        data=MOCK_DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
+    assert result["step_id"] == "discovery_confirm"
 
 
-async def test_zeroconf_flow_confirm_creates_entry(hass: HomeAssistant) -> None:
-    """Test confirming zeroconf discovery creates an entry."""
+async def test_discovery_flow_confirm_creates_entry(hass: HomeAssistant) -> None:
+    """Test confirming discovery creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=MOCK_ZEROCONF_INFO,
+        context={"source": "discovery"},
+        data=MOCK_DISCOVERY_INFO,
     )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"num_channels": 2},
+        user_input={},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert "Shure Wireless" in result["title"]
+    assert "Shure SLXD4DE" in result["title"]
     assert result["data"]["num_channels"] == 2
-    assert result["data"]["port"] == MOCK_PORT
+    assert result["data"]["port"] == DEFAULT_PORT
 
 
-async def test_zeroconf_flow_already_configured(
+async def test_discovery_flow_already_configured(
     hass: HomeAssistant,
 ) -> None:
-    """Test zeroconf aborts if device already configured."""
+    """Test discovery aborts if device already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Existing",
@@ -188,8 +174,8 @@ async def test_zeroconf_flow_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=MOCK_ZEROCONF_INFO,
+        context={"source": "discovery"},
+        data=MOCK_DISCOVERY_INFO,
     )
 
     assert result["type"] is FlowResultType.ABORT

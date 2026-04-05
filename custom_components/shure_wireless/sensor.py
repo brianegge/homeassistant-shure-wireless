@@ -10,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT, EntityCategory
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfFrequency,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,6 +48,8 @@ async def async_setup_entry(
                 ShureRFLevelSensor(coordinator, entry, ch_num),
                 ShureAudioLevelSensor(coordinator, entry, ch_num),
                 ShureChannelNameSensor(coordinator, entry, ch_num),
+                ShureFrequencySensor(coordinator, entry, ch_num),
+                ShureBatteryHealthSensor(coordinator, entry, ch_num),
             ]
         )
 
@@ -81,6 +88,7 @@ class ShureSensorBase(CoordinatorEntity[ShureCoordinator], SensorEntity):
             name=f"{name}",
             manufacturer="Shure",
             model=channel.tx_model or "Wireless Transmitter",
+            sw_version=channel.tx_fw_ver or None,
             via_device=(DOMAIN, self._entry.entry_id),
         )
 
@@ -277,4 +285,78 @@ class ShureChannelNameSensor(ShureSensorBase):
             attrs["tx_model"] = channel.tx_model
         if channel.tx_device_id:
             attrs["tx_device_id"] = channel.tx_device_id
+        return attrs
+
+
+class ShureFrequencySensor(ShureSensorBase):
+    """RF frequency sensor with group and channel info."""
+
+    _attr_device_class = SensorDeviceClass.FREQUENCY
+    _attr_native_unit_of_measurement = UnitOfFrequency.MEGAHERTZ
+    _attr_translation_key = "frequency"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_frequency"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the frequency in MHz."""
+        freq = self._channel.frequency
+        if not freq:
+            return None
+        try:
+            return float(freq)
+        except ValueError:
+            return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return group and channel attributes."""
+        channel = self._channel
+        attrs: dict[str, Any] = {}
+        if channel.group:
+            attrs["group"] = channel.group
+        if channel.channel_num:
+            attrs["channel"] = channel.channel_num
+        return attrs
+
+
+class ShureBatteryHealthSensor(ShureSensorBase):
+    """Battery health percentage sensor."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_translation_key = "battery_health"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: ShureCoordinator,
+        entry: ShureConfigEntry,
+        channel_num: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, entry, channel_num)
+        self._attr_unique_id = f"{entry.entry_id}_ch{channel_num}_battery_health"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return battery health percentage."""
+        return self._channel.battery_health
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional battery health attributes."""
+        channel = self._channel
+        attrs: dict[str, Any] = {}
+        if channel.battery_cycle is not None:
+            attrs["cycle_count"] = channel.battery_cycle
         return attrs
