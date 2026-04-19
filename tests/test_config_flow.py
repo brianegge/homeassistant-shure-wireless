@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -238,3 +238,46 @@ async def test_reconfigure_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+# ===== _test_connection helper tests =====
+
+
+async def test_test_connection_function(hass: HomeAssistant) -> None:
+    """Test the _test_connection helper function."""
+    from custom_components.shure_wireless.config_flow import _test_connection
+    from custom_components.shure_wireless.shure_client import ReceiverState
+
+    mock_client = MagicMock()
+    mock_client.connect = AsyncMock()
+    mock_client.disconnect = AsyncMock()
+    mock_client.receiver = ReceiverState(device_id="SLXD4-001")
+
+    with patch(
+        "custom_components.shure_wireless.config_flow.ShureClient",
+        return_value=mock_client,
+    ):
+        device_id = await _test_connection(hass, MOCK_HOST, DEFAULT_PORT)
+
+    assert device_id == "SLXD4-001"
+    mock_client.connect.assert_awaited_once()
+    mock_client.disconnect.assert_awaited_once()
+
+
+async def test_test_connection_no_device_id(hass: HomeAssistant) -> None:
+    """Test _test_connection falls back to host:port when device has no ID."""
+    from custom_components.shure_wireless.config_flow import _test_connection
+    from custom_components.shure_wireless.shure_client import ReceiverState
+
+    mock_client = MagicMock()
+    mock_client.connect = AsyncMock()
+    mock_client.disconnect = AsyncMock()
+    mock_client.receiver = ReceiverState(device_id=None)
+
+    with patch(
+        "custom_components.shure_wireless.config_flow.ShureClient",
+        return_value=mock_client,
+    ):
+        device_id = await _test_connection(hass, MOCK_HOST, DEFAULT_PORT)
+
+    assert device_id == f"{MOCK_HOST}:{DEFAULT_PORT}"

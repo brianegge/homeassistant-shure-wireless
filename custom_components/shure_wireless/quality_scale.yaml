@@ -1,0 +1,56 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide additional service actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      Uses local_push via Shure Network Control Protocol (TCP push updates).
+      Coordinator heartbeat interval is 60s for connection monitoring only.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: done
+    comment: No external dependencies; uses only stdlib asyncio TCP sockets.
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide additional service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: done
+    comment: |
+      Push updates from the Shure receiver are handled via a callback
+      registered in async_setup_entry, which triggers coordinator refresh.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide additional service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: todo
+    comment: README needs configuration parameters section.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration uses plain TCP without authentication.
+      No credentials to reauthenticate.
+  test-coverage:
+    status: todo
+    comment: Working toward 95% coverage target.
