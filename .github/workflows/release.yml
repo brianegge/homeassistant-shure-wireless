@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "custom_components/**"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,17 +19,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get current version
-        id: current
-        run: |
-          version=$(jq -r .version custom_components/shure_wireless/manifest.json)
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Bump patch version
+      - name: Bump patch version from latest tag
         id: bump
         run: |
-          IFS='.' read -r major minor patch <<< "${{ steps.current.outputs.version }}"
-          new_version="${major}.${minor}.$((patch + 1))"
+          latest=$(git tag -l 'v*.*.*' --sort=-v:refname | head -n1)
+          if [ -z "$latest" ]; then
+            new_version="1.0.0"
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            new_version="${major}.${minor}.$((patch + 1))"
+          fi
           echo "version=$new_version" >> "$GITHUB_OUTPUT"
 
       - name: Update manifest for release zip
