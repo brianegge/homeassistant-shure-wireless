@@ -31,6 +31,7 @@ class ShureRuntimeData:
 
     client: ShureClient
     coordinator: ShureCoordinator
+    receiver_device_id: str
 
 
 ShureConfigEntry = ConfigEntry[ShureRuntimeData]
@@ -181,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShureConfigEntry) -> boo
 
     # Register the receiver as a parent device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    receiver = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         name=f"Shure {client.receiver.model or 'Receiver'} ({host})",
@@ -190,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ShureConfigEntry) -> boo
         sw_version=client.receiver.firmware_version or None,
     )
 
-    entry.runtime_data = ShureRuntimeData(client=client, coordinator=coordinator)
+    entry.runtime_data = ShureRuntimeData(client=client, coordinator=coordinator, receiver_device_id=receiver.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

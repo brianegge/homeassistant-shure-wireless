@@ -18,6 +18,11 @@ jobs:
       - name: Auto-merge Dependabot PRs
         run: |
           gh pr list --author "app/dependabot" --state open --json number,title --jq '.[] | .number' | while read pr; do
+            # main has no required checks, so gate here: a red HA bump stays open as the compatibility alert
+            if ! gh pr checks "$pr" >/dev/null 2>&1; then
+              echo "Skipping PR #$pr: checks failing or pending"
+              continue
+            fi
             echo "Approving and merging PR #$pr"
             gh pr review "$pr" --approve || true
             gh pr merge "$pr" --squash --auto || true

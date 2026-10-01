@@ -93,7 +93,9 @@ async def test_setup_registers_device(
     await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, mock_config_entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
 
     assert device is not None
     assert device.manufacturer == "Shure"
