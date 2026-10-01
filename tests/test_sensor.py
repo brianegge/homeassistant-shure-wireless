@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import pytest
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -361,6 +362,36 @@ async def test_device_info(
     assert device is not None
     assert device.manufacturer == "Shure"
     assert device.model == "SLXD1"
+
+
+@pytest.mark.parametrize("has_via_device_id", [True, False], ids=["via_device_id", "via_device_fallback"])
+async def test_channel_device_linked_to_receiver(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
+    has_via_device_id: bool,
+) -> None:
+    """Test channel devices hang off the receiver with either DeviceInfo key.
+
+    The via_device fallback serves HA < 2026.8; current HA stops accepting it in 2027.8,
+    at which point this case fails and the fallback (and old-HA support) should be dropped.
+    """
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.shure_wireless.const import DOMAIN
+
+    with patch("custom_components.shure_wireless.entity._HAS_VIA_DEVICE_ID", has_via_device_id):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    entry_id = mock_config_entry.entry_id
+    receiver = device_registry.async_get_device_by_identifier((DOMAIN, entry_id), entry_id)
+    channel = device_registry.async_get_device_by_identifier((DOMAIN, f"{entry_id}_ch1"), entry_id)
+    assert receiver is not None
+    assert channel is not None
+    assert channel.via_device_id == receiver.id
+    assert mock_config_entry.runtime_data.receiver_device_id == receiver.id
 
 
 class TestGainValues:
