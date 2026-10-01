@@ -35,6 +35,16 @@ def auto_enable_custom_integrations(hass: HomeAssistant) -> None:
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery_listener():
+    """Keep async_setup from binding the real ACN multicast socket."""
+    with patch(
+        "custom_components.shure_wireless.create_discovery_listener",
+        return_value=(MagicMock(), MagicMock()),
+    ) as mock_listener:
+        yield mock_listener
+
+
 def make_mock_client(
     *,
     host: str = MOCK_HOST,

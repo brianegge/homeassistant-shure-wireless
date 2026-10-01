@@ -8,6 +8,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import ShureConfigEntry, ShureCoordinator
 from .const import DOMAIN
 
+# HA 2026.8 replaced DeviceInfo's via_device with via_device_id; the old key stops working in 2027.8.
+_HAS_VIA_DEVICE_ID = "via_device_id" in DeviceInfo.__annotations__
+
 
 class ShureEntity(CoordinatorEntity[ShureCoordinator]):
     """Base class for Shure channel entities."""
@@ -36,14 +39,18 @@ class ShureEntity(CoordinatorEntity[ShureCoordinator]):
         """Return device info for this channel."""
         channel = self._channel
         name = channel.name or f"Channel {self._channel_num}"
-        return DeviceInfo(
+        info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._entry.entry_id}_ch{self._channel_num}")},
             name=f"{name}",
             manufacturer="Shure",
             model=channel.tx_model or "Wireless Transmitter",
             sw_version=channel.tx_fw_ver or None,
-            via_device=(DOMAIN, self._entry.entry_id),
         )
+        if _HAS_VIA_DEVICE_ID:
+            info["via_device_id"] = self._entry.runtime_data.receiver_device_id
+        else:
+            info["via_device"] = (DOMAIN, self._entry.entry_id)
+        return info
 
     @property
     def available(self) -> bool:
