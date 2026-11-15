@@ -433,7 +433,7 @@ class TestSecondsSinceRx:
     @pytest.mark.asyncio
     async def test_connect_starts_the_clock(self):
         client = ShureClient("192.168.1.1")
-        assert client.seconds_since_rx > 1000  # never heard from
+        client._last_rx = time.monotonic() - 500  # a stale clock from an old connection
         reader = asyncio.StreamReader()
         writer = MagicMock()
         writer.drain = AsyncMock()
