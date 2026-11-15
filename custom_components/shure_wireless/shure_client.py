@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -87,11 +88,17 @@ class ShureClient:
         self._connected = False
         self._update_callbacks: list[Callable[[], None]] = []
         self._buffer = ""
+        self._last_rx = 0.0
 
     @property
     def connected(self) -> bool:
         """Return True if connected."""
         return self._connected
+
+    @property
+    def seconds_since_rx(self) -> float:
+        """Seconds since anything was last received from the receiver."""
+        return time.monotonic() - self._last_rx
 
     def register_callback(self, callback: Callable[[], None]) -> Callable[[], None]:
         """Register a callback for state updates. Returns unregister function."""
@@ -117,6 +124,7 @@ class ShureClient:
             timeout=10,
         )
         self._connected = True
+        self._last_rx = time.monotonic()
         self._listen_task = asyncio.create_task(self._listen())
 
         # Request receiver-level state
@@ -188,6 +196,7 @@ class ShureClient:
                     self._connected = False
                     self._notify_update()
                     break
+                self._last_rx = time.monotonic()
                 self._buffer += data.decode("ascii", errors="replace")
                 self._process_buffer()
         except asyncio.CancelledError:
