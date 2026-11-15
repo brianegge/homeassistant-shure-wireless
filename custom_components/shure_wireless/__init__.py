@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, HEARTBEAT_INTERVAL, PLATFORMS
+from .const import DOMAIN, HEARTBEAT_INTERVAL, PLATFORMS, STALE_TIMEOUT
 from .discovery import ShureDeviceInfo, create_discovery_listener
 from .shure_client import ShureClient
 
@@ -64,6 +64,19 @@ class ShureCoordinator(DataUpdateCoordinator[None]):
             except Exception as err:
                 raise UpdateFailed(f"Cannot connect to Shure receiver at {self.client.host}: {err}") from err
         else:
+            silent = self.client.seconds_since_rx
+            if silent > STALE_TIMEOUT:
+                # Powered off or unplugged: the socket is still "open" but dead.
+                # Drop it so the entities go unavailable now rather than when
+                # TCP finally times out; the next heartbeat tries to reconnect.
+                _LOGGER.warning(
+                    "No data from Shure receiver at %s for %d s; treating the connection as lost",
+                    self.client.host,
+                    silent,
+                )
+                self._was_available = False
+                await self.client.disconnect()
+                raise UpdateFailed(f"No data from Shure receiver at {self.client.host} for {int(silent)} s")
             if not self._was_available:
                 _LOGGER.info("Shure receiver at %s is available again", self.client.host)
                 self._was_available = True

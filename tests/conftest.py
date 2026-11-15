@@ -59,6 +59,7 @@ def make_mock_client(
     client.num_channels = num_channels
     client._connected = connected
     client.connected = connected
+    client.seconds_since_rx = 0.0
 
     client.receiver = ReceiverState(
         device_id=MOCK_DEVICE_ID,

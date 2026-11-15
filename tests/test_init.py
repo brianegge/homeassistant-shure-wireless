@@ -232,3 +232,43 @@ async def test_coordinator_logs_reconnect(
     await hass.async_block_till_done()
 
     assert coordinator.last_update_success is True
+
+
+async def test_coordinator_drops_silent_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """A receiver that went quiet (powered off) is disconnected and marked unavailable."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_setup_entry.seconds_since_rx = 300.0
+    mock_setup_entry.send_command.reset_mock()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_setup_entry.disconnect.assert_awaited_once()
+    mock_setup_entry.send_command.assert_not_awaited()
+    assert coordinator.last_update_success is False
+
+
+async def test_coordinator_keeps_recently_heard_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Silence shorter than the stale timeout is normal between samples."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_setup_entry.seconds_since_rx = 61.0
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_setup_entry.disconnect.assert_not_awaited()
+    assert coordinator.last_update_success is True

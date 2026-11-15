@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -411,6 +413,34 @@ class TestConnect:
         # Should not raise
         await client.disconnect()
         assert client.connected is False
+
+
+class TestSecondsSinceRx:
+    """Silence tracking used to spot a receiver that lost power."""
+
+    @pytest.mark.asyncio
+    async def test_received_data_resets_the_clock(self):
+        client = ShureClient("192.168.1.1")
+        client._last_rx = time.monotonic() - 500
+        reader = asyncio.StreamReader()
+        reader.feed_data(b"< REP 1 CHAN_NAME {Body 1} >")
+        reader.feed_eof()
+        client._reader = reader
+        client._connected = True
+        await client._listen()
+        assert client.seconds_since_rx < 5
+
+    @pytest.mark.asyncio
+    async def test_connect_starts_the_clock(self):
+        client = ShureClient("192.168.1.1")
+        assert client.seconds_since_rx > 1000  # never heard from
+        reader = asyncio.StreamReader()
+        writer = MagicMock()
+        writer.drain = AsyncMock()
+        with patch("asyncio.open_connection", return_value=(reader, writer)):
+            await client.connect()
+        assert client.seconds_since_rx < 5
+        await client.disconnect()
 
 
 class TestCleanValue:
