@@ -26,6 +26,12 @@ async def async_get_config_entry_diagnostics(
 
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    # HA 2026.9+ registers the channels as child devices, which are listed separately.
+    child_devices = (
+        dr.async_child_entries_for_config_entry(device_registry, entry.entry_id)
+        if hasattr(dr, "async_child_entries_for_config_entry")
+        else []
+    )
 
     channels_data: dict[str, dict[str, Any]] = {}
     for ch_num, ch_state in client.channels.items():
@@ -44,6 +50,7 @@ async def async_get_config_entry_diagnostics(
             "battery_cycle": ch_state.battery_cycle,
             "battery_temp_c": ch_state.battery_temp_c,
             "tx_model": ch_state.tx_model,
+            "tx_fw_ver": ch_state.tx_fw_ver,
             "tx_device_id": ch_state.tx_device_id,
             "tx_mute_status": ch_state.tx_mute_status,
             "audio_gain": ch_state.audio_gain,
@@ -84,6 +91,7 @@ async def async_get_config_entry_diagnostics(
                 }
                 for device in devices
             ],
+            "child_devices": [{"name": device.name} for device in child_devices],
         },
         TO_REDACT,
     )
