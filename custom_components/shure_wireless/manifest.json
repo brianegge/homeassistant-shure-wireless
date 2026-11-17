@@ -1,6 +1,7 @@
 {
   "domain": "shure_wireless",
   "name": "Shure Wireless",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@brianegge"],
   "config_flow": true,
   "documentation": "https://github.com/brianegge/homeassistant-shure-wireless",
